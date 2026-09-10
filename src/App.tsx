@@ -5,24 +5,40 @@ import Sidebar from './components/layout/Sidebar'
 import DecisionCard from './components/decisions/DecisionCard'
 import DecisionResult from './components/decisions/DecisionResult'
 import DecisionForm from './components/decisions/DecisionForm'
-import { initialDecisions } from './data/initialDecisions'
+import ConfirmDialog from './components/ui/ConfirmDialog'
+import { useDecisions } from './hooks/useDecisions'
 import type { Decision } from './types/decision'
 
 function App() {
-  const [decisions, setDecisions] = useState<Decision[]>(initialDecisions)
+  const { decisions, setDecisions } = useDecisions()
+
   const [selectedDecisionId, setSelectedDecisionId] = useState<string | null>(
-    initialDecisions[0]?.id ?? null
+    decisions[0]?.id ?? null
   )
+
   const [isFormOpen, setIsFormOpen] = useState(false)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [deleteDecisionId, setDeleteDecisionId] = useState<string | null>(
+    null
+  )
 
   const selectedDecision = decisions.find(
     (decision) => decision.id === selectedDecisionId
+  )
+
+  const decisionToDelete = decisions.find(
+    (decision) => decision.id === deleteDecisionId
   )
 
   const handleCreateDecision = (decision: Decision) => {
     setDecisions((prev) => [...prev, decision])
     setSelectedDecisionId(decision.id)
     setIsFormOpen(false)
+  }
+
+  const handleSelectDecision = (id: string) => {
+    setSelectedDecisionId(id)
+    setIsSidebarOpen(false)
   }
 
   const handleSelectOption = (optionId: string) => {
@@ -55,44 +71,68 @@ function App() {
     )
   }
 
-  const handleDeleteDecision = (id: string) => {
-    setDecisions((prev) => {
-      const updated = prev.filter((decision) => decision.id !== id)
+  const handleDeleteDecision = () => {
+    if (!deleteDecisionId) return
 
-      if (selectedDecisionId === id) {
+    setDecisions((prev) => {
+      const updated = prev.filter(
+        (decision) => decision.id !== deleteDecisionId
+      )
+
+      if (selectedDecisionId === deleteDecisionId) {
         setSelectedDecisionId(updated[0]?.id ?? null)
       }
 
       return updated
     })
+
+    setDeleteDecisionId(null)
+    setIsSidebarOpen(false)
   }
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header onNewDecision={() => setIsFormOpen(true)} />
+      <Header
+        onNewDecision={() => setIsFormOpen(true)}
+        onMenuClick={() => setIsSidebarOpen(true)}
+      />
 
       <div className="flex min-h-[calc(100vh-4rem)]">
-        <Sidebar
-          decisions={decisions}
-          selectedDecisionId={selectedDecisionId}
-          onSelectDecision={setSelectedDecisionId}
-          onDeleteDecision={handleDeleteDecision}
+        <div
+          className={`fixed inset-0 z-40 bg-black/40 transition md:hidden ${isSidebarOpen
+              ? 'visible opacity-100'
+              : 'invisible opacity-0'
+            }`}
+          onClick={() => setIsSidebarOpen(false)}
         />
 
-        <main className="flex-1 p-6 lg:p-10">
+        <div
+          className={`fixed inset-y-0 left-0 z-50 w-72 transform transition-transform duration-300 md:static md:block md:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+            }`}
+        >
+          <Sidebar
+            decisions={decisions}
+            selectedDecisionId={selectedDecisionId}
+            onSelectDecision={handleSelectDecision}
+            onDeleteDecision={setDeleteDecisionId}
+            onClose={() => setIsSidebarOpen(false)}
+          />
+        </div>
+
+        <main className="min-w-0 flex-1 p-5 sm:p-6 lg:p-10">
           {selectedDecision ? (
             <div className="mx-auto max-w-3xl">
               <div className="flex items-start justify-between gap-4">
-                <div>
+                <div className="min-w-0">
                   <span className="text-sm font-medium text-gray-400">
                     Decision
                   </span>
 
-                  <h1 className="mt-2 text-3xl font-bold tracking-tight text-gray-900">
+                  <h1 className="mt-2 break-words text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
                     {selectedDecision.question}
                   </h1>
 
-                  <p className="mt-2 text-gray-500">
+                  <p className="mt-2 text-sm text-gray-500 sm:text-base">
                     {selectedDecision.selectedOptionId
                       ? 'Your decision has been made.'
                       : 'Choose one option below.'}
@@ -101,9 +141,9 @@ function App() {
 
                 <button
                   onClick={() =>
-                    handleDeleteDecision(selectedDecision.id)
+                    setDeleteDecisionId(selectedDecision.id)
                   }
-                  className="shrink-0 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-red-500 transition hover:border-red-200 hover:bg-red-50"
+                  className="shrink-0 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-red-500 transition hover:border-red-200 hover:bg-red-50 sm:px-4"
                 >
                   Delete
                 </button>
@@ -123,8 +163,8 @@ function App() {
             </div>
           ) : (
             <div className="flex min-h-[60vh] items-center justify-center">
-              <div className="text-center">
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-2xl shadow-sm">
+              <div className="max-w-sm text-center">
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-2xl shadow-sm">
                   +
                 </div>
 
@@ -132,13 +172,13 @@ function App() {
                   No decisions yet
                 </h2>
 
-                <p className="mt-2 text-sm text-gray-500">
-                  Create your first decision to get started.
+                <p className="mt-2 text-sm leading-6 text-gray-500">
+                  Create a decision and add some options to get started.
                 </p>
 
                 <button
                   onClick={() => setIsFormOpen(true)}
-                  className="mt-5 rounded-xl bg-gray-900 px-5 py-3 text-sm font-medium text-white transition hover:bg-gray-700"
+                  className="mt-6 rounded-xl bg-gray-900 px-5 py-3 text-sm font-medium text-white transition hover:bg-gray-700"
                 >
                   Create Decision
                 </button>
@@ -152,6 +192,15 @@ function App() {
         <DecisionForm
           onCreate={handleCreateDecision}
           onClose={() => setIsFormOpen(false)}
+        />
+      )}
+
+      {decisionToDelete && (
+        <ConfirmDialog
+          title="Delete decision?"
+          description={`"${decisionToDelete.question}" will be permanently removed from your decisions.`}
+          onConfirm={handleDeleteDecision}
+          onCancel={() => setDeleteDecisionId(null)}
         />
       )}
     </div>

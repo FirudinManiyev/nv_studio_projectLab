@@ -1,3 +1,4 @@
+import { Check, RotateCcw } from 'lucide-react'
 import type { Decision } from '../../types/decision'
 
 interface DecisionResultProps {
@@ -16,29 +17,38 @@ function DecisionResult({
     if (!selectedOption) return null
 
     return (
-        <div className="mt-8 rounded-2xl border border-gray-200 bg-white p-8 text-center shadow-sm">
-            <span className="text-sm font-medium text-gray-500">
-                Your decision
-            </span>
+        <div className="mt-8 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+            <div className="p-8 text-center sm:p-10">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-green-50 text-green-600">
+                    <Check size={26} strokeWidth={2.5} />
+                </div>
 
-            <div className="mx-auto mt-6 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 text-2xl">
-                ✓
+                <p className="mt-5 text-sm font-medium text-gray-400">
+                    Your decision
+                </p>
+
+                <h2 className="mt-2 text-3xl font-bold tracking-tight text-gray-900">
+                    {selectedOption.label}
+                </h2>
+
+                <p className="mt-3 text-sm text-gray-500">
+                    You chose this option.
+                </p>
+
+                <button
+                    onClick={onChooseAgain}
+                    className="mt-7 inline-flex items-center gap-2 rounded-xl border border-gray-200 px-5 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
+                >
+                    <RotateCcw size={16} />
+                    Choose Again
+                </button>
             </div>
 
-            <h2 className="mt-5 text-2xl font-bold text-gray-900">
-                {selectedOption.label}
-            </h2>
-
-            <p className="mt-2 text-sm text-gray-500">
-                You chose this option.
-            </p>
-
-            <button
-                onClick={onChooseAgain}
-                className="mt-6 rounded-xl bg-gray-900 px-5 py-3 text-sm font-medium text-white transition hover:bg-gray-700"
-            >
-                Choose Again
-            </button>
+            <div className="border-t bg-gray-50 px-6 py-4 text-center">
+                <p className="text-xs text-gray-400">
+                    You can make another choice whenever you want.
+                </p>
+            </div>
         </div>
     )
 }
